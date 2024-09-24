@@ -50,6 +50,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#define CL_TARGET_OPENCL_VERSION 200 /* clCreateCommandQueueWithProperties */
+
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -112,7 +114,7 @@ int main(int argc, char** argv)
     //
     int i = 0;
     unsigned int count = DATA_SIZE;
-    for(i = 0; i < count; i++)
+    for (i = 0; i < count; i++)
         data[i] = rand() / (float)RAND_MAX;
     
     // Connect to a compute device
@@ -136,10 +138,10 @@ int main(int argc, char** argv)
 
     // Create a command commands
     //
-    commands = clCreateCommandQueue(context, device_id, 0, &err);
+    commands = clCreateCommandQueueWithProperties(context, device_id, NULL, &err);
     if (!commands)
     {
-        printf("Error: Failed to create a command commands!\n");
+        printf("Error: Failed to create a command queue!\n");
         return EXIT_FAILURE;
     }
 
