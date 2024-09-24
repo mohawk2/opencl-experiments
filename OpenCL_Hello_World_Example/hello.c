@@ -1,5 +1,5 @@
 // build and run with:
-// (cd OpenCL_Hello_World_Example/; cc -o hello hello.c -lOpenCL -lm && ./hello)
+// (cd OpenCL_Hello_World_Example/; cc -o hello hello.c -lOpenCL -lm && ./hello y 1024)
 //
 // File:       hello.c
 //
@@ -67,12 +67,6 @@
 #else
 #include <CL/opencl.h>
 #endif
-
-////////////////////////////////////////////////////////////////////////////////
-
-// Use a static data size for simplicity
-//
-#define DATA_SIZE (1024)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -189,10 +183,25 @@ const char* clGetErrorString(int errorCode) {
 
 int main(int argc, char** argv)
 {
+    if (argc != 3) {
+      fprintf(stderr, "Usage: %s <useGPU=y/n> <nitems>\n", argv[0]);
+      return 1;
+    }
+    const int useGPU = argv[1][0] == 'y';
+    const int nitems = atoi(argv[2]);
+
     int err;                            // error code returned from api calls
       
-    float data[DATA_SIZE];              // original data set given to device
-    float results[DATA_SIZE];           // results returned from device
+    float *data = malloc(sizeof(float) * nitems);              // original data set given to device
+    if (!data) {
+        printf("Error: Failed to allocate data\n");
+        exit(1);
+    }
+    float *results = malloc(sizeof(float) * nitems);           // results returned from device
+    if (!results) {
+        printf("Error: Failed to allocate results\n");
+        exit(1);
+    }
     unsigned int correct;               // number of correct results returned
 
     size_t global;                      // global domain size for our calculation
@@ -210,14 +219,13 @@ int main(int argc, char** argv)
     // Fill our data set with random float values
     //
     int i = 0;
-    unsigned int count = DATA_SIZE;
+    unsigned int count = nitems;
     for (i = 0; i < count; i++)
         data[i] = rand() / (float)RAND_MAX;
     
     // Connect to a compute device
     //
-    int gpu = 1;
-    err = clGetDeviceIDs(NULL, gpu ? CL_DEVICE_TYPE_GPU : CL_DEVICE_TYPE_CPU, 1, &device_id, NULL);
+    err = clGetDeviceIDs(NULL, useGPU ? CL_DEVICE_TYPE_GPU : CL_DEVICE_TYPE_CPU, 1, &device_id, NULL);
     if (err != CL_SUCCESS)
     {
         printf("Error: Failed to create a device group!\n");
@@ -359,6 +367,8 @@ int main(int argc, char** argv)
     clReleaseKernel(kernel);
     clReleaseCommandQueue(commands);
     clReleaseContext(context);
+    free(data);
+    free(results);
 
     return 0;
 }
