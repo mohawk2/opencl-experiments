@@ -58,7 +58,11 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifdef __APPLE__
 #include <OpenCL/opencl.h>
+#else
+#include <CL/opencl.h>
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
