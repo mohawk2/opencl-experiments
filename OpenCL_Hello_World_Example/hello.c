@@ -1,3 +1,5 @@
+// build and run with:
+// (cd OpenCL_Hello_World_Example/; cc -o hello hello.c -lOpenCL -lm && ./hello)
 //
 // File:       hello.c
 //
