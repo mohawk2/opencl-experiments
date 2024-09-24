@@ -85,8 +85,8 @@ const char *KernelSource = "\n" \
 "   const unsigned int count)                                           \n" \
 "{                                                                      \n" \
 "   int i = get_global_id(0);                                           \n" \
-"   if(i < count)                                                       \n" \
-"       output[i] = input[i] * input[i];                                \n" \
+"   if (i < count)                                                       \n" \
+"       output[i] = sin(input[i]);                                \n" \
 "}                                                                      \n" \
 "\n";
 
@@ -343,7 +343,7 @@ int main(int argc, char** argv)
     correct = 0;
     for (i = 0; i < count; i++)
     {
-        if(results[i] == data[i] * data[i])
+        if (fabsf(results[i] - sin(data[i])) < 1e-6)
             correct++;
     }
     
@@ -362,4 +362,3 @@ int main(int argc, char** argv)
 
     return 0;
 }
-
