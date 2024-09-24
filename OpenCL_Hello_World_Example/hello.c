@@ -322,6 +322,27 @@ int main(int argc, char** argv)
         exit(1);
     }
 
+    cl_uint max_wi_ndims;
+    err = clGetDeviceInfo(device_id, CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS, sizeof(max_wi_ndims), &max_wi_ndims, NULL);
+    if (err)
+    {
+        printf("Error: Failed to get CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS: %s\n", clGetErrorString(err));
+        return EXIT_FAILURE;
+    }
+
+    size_t max_wi_dims[max_wi_ndims];
+    err = clGetDeviceInfo(device_id, CL_DEVICE_MAX_WORK_ITEM_SIZES, sizeof(max_wi_dims), max_wi_dims, NULL);
+    if (err)
+    {
+        printf("Error: Failed to get CL_DEVICE_MAX_WORK_ITEM_SIZES: %s\n", clGetErrorString(err));
+        return EXIT_FAILURE;
+    }
+
+    if (local > count) /* don't ask for more than all */
+      local = count;
+    if (local > max_wi_dims[0]) /* don't ask for more than max dim */
+      local = max_wi_dims[0];
+
     // Execute the kernel over the entire range of our 1d input data set
     // using the maximum number of work group items for this device
     //
