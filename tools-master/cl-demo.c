@@ -1,15 +1,18 @@
+#define CL_TARGET_OPENCL_VERSION 300
+
 #include "timing.h"
 #include "cl-helper.h"
 
 
+#define KERNEL_FILE "vec-add-soln.cl"
 
 
 int main(int argc, char **argv)
 {
   if (argc != 3)
   {
-    fprintf(stderr, "need two arguments!\n");
-    abort();
+    fprintf(stderr, "Usage: %s <nitems> <ntrips>\n", argv[0]);
+    return 1;
   }
 
   const cl_long n = atol(argv[1]);
@@ -17,14 +20,20 @@ int main(int argc, char **argv)
 
   cl_context ctx;
   cl_command_queue queue;
-  create_context_on(CHOOSE_INTERACTIVELY, CHOOSE_INTERACTIVELY, 0, &ctx, &queue, 0);
+  if (!create_context_on(CHOOSE_INTERACTIVELY, CHOOSE_INTERACTIVELY, 0, &ctx, &queue, 0))
+    return 1;
 
-  print_device_info_from_queue(queue);
+  if (!print_device_info_from_queue(queue))
+    return 1;
 
   // --------------------------------------------------------------------------
-  // load kernels 
+  // load kernels
   // --------------------------------------------------------------------------
-  char *knl_text = read_file("vec-add-soln.cl");
+  char *knl_text = read_file(KERNEL_FILE);
+  if (!knl_text) {
+    fprintf(stderr, "error with '%s'\n", KERNEL_FILE);
+    return 1;
+  }
   cl_kernel knl = kernel_from_string(ctx, knl_text, "sum", NULL);
   free(knl_text);
 
@@ -32,11 +41,11 @@ int main(int argc, char **argv)
   // allocate and initialize CPU memory
   // --------------------------------------------------------------------------
   float *a = (float *) malloc(sizeof(float) * n);
-  if (!a) { perror("alloc x"); abort(); }
+  if (!a) { perror("alloc x"); return 1; }
   float *b = (float *) malloc(sizeof(float) * n);
-  if (!b) { perror("alloc y"); abort(); }
+  if (!b) { perror("alloc y"); return 1; }
   float *c = (float *) malloc(sizeof(float) * n);
-  if (!c) { perror("alloc z"); abort(); }
+  if (!c) { perror("alloc z"); return 1; }
 
   for (size_t i = 0; i < n; ++i)
   {
@@ -113,7 +122,7 @@ int main(int argc, char **argv)
     if (c[i] != 3*i)
     {
       printf("BAD %ld %f %f!\n", i, c[i], c[i] - 3*i);
-      abort();
+      return 1;
     }
   puts("GOOD");
 

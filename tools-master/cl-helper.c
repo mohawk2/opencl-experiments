@@ -22,6 +22,7 @@
 
 
 
+#define CL_TARGET_OPENCL_VERSION 300
 
 #include "cl-helper.h"
 #include <string.h>
@@ -106,7 +107,7 @@ const char *cl_error_to_str(cl_int e)
 
 
 
-void print_platforms_devices()
+void *print_platforms_devices()
 {
   // get number of platforms
   cl_uint plat_count;
@@ -207,7 +208,7 @@ const char *CHOOSE_INTERACTIVELY = "INTERACTIVE";
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
-void create_context_on(const char *plat_name, const char*dev_name, cl_uint idx,
+void *create_context_on(const char *plat_name, const char*dev_name, cl_uint idx,
     cl_context *ctx, cl_command_queue *queue, int enable_profiling)
 {
   char dev_sel_buf[MAX_NAME_LEN];
@@ -352,7 +353,7 @@ void create_context_on(const char *plat_name, const char*dev_name, cl_uint idx,
               CHECK_CL_ERROR(status, "clCreateCommandQueue");
             }
 
-            return;
+            return (void *)1;
           }
           else
             --idx;
@@ -366,7 +367,7 @@ void create_context_on(const char *plat_name, const char*dev_name, cl_uint idx,
   free(platforms);
 
   fputs("create_context_on: specified device not found.\n", stderr);
-  abort();
+  return NULL;
 }
 
 
@@ -433,7 +434,7 @@ cl_kernel kernel_from_string(cl_context ctx,
           0, NULL, &log_size));
 
     bool do_print = status != CL_SUCCESS;
-    if (!do_print && log_size)
+    if (!do_print && log_size > 1) /* 1 is the null-terminator */
     {
       if (getenv("CL_HELPER_PRINT_COMPILER_OUTPUT"))
         do_print = true;
@@ -441,11 +442,11 @@ cl_kernel kernel_from_string(cl_context ctx,
       {
         if (!printed_compiler_output_message && !getenv("CL_HELPER_NO_COMPILER_OUTPUT_NAG"))
         {
-          fprintf(stderr, "*** Kernel compilation resulted in non-empty log message.\n"
+          fprintf(stderr, "*** Kernel compilation resulted in non-empty log message (length=%zd).\n"
               "*** Set environment variable CL_HELPER_PRINT_COMPILER_OUTPUT=1 to see more.\n"
               "*** NOTE: this may include compiler warnings and other important messages\n"
               "***   about your code.\n"
-              "*** Set CL_HELPER_NO_COMPILER_OUTPUT_NAG=1 to disable this message.\n");
+              "*** Set CL_HELPER_NO_COMPILER_OUTPUT_NAG=1 to disable this message.\n", log_size);
           printed_compiler_output_message = true;
         }
       }
@@ -462,7 +463,7 @@ cl_kernel kernel_from_string(cl_context ctx,
 
       CALL_CL_GUARDED(clGetProgramBuildInfo, (program, dev, CL_PROGRAM_BUILD_LOG,
             log_size, log, NULL));
-      fprintf(stderr, "*** build of '%s' on '%s' said:\n%s\n*** (end of message)\n",
+      fprintf(stderr, "Error code was %s\n*** build of '%s' on '%s' said:\n%s\n*** (end of message)\n", cl_error_to_str(status),
           knl_name, devname, log);
     }
   }
@@ -481,7 +482,7 @@ cl_kernel kernel_from_string(cl_context ctx,
 
 
 
-void print_device_info(cl_device_id device)
+void *print_device_info(cl_device_id device)
 {
   // adapted from http://graphics.stanford.edu/~yoel/notes/clInfo.c
 
@@ -731,7 +732,7 @@ void print_device_info(cl_device_id device)
 
 
 
-void print_device_info_from_queue(cl_command_queue queue)
+void *print_device_info_from_queue(cl_command_queue queue)
 {
   cl_device_id dev;
   CALL_CL_GUARDED(clGetCommandQueueInfo,

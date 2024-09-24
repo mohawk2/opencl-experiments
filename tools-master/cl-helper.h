@@ -74,7 +74,7 @@
 
 /* An error check macro for Unix system functions. If "COND" is true, then the
  * last system error ("errno") is printed along with MSG, which is supposed to
- * be a string describing what you were doing.
+ * be a string describing what you were doing, then returns NULL
  *
  * Example:
  * CHECK_SYS_ERROR(dave != 0, "opening hatch");
@@ -83,7 +83,7 @@
   if (COND) \
   { \
     perror(MSG); \
-    abort(); \
+    return NULL; \
   }
 
 /* Return a string describing the OpenCL error code 'e'.
@@ -93,7 +93,7 @@ const char *cl_error_to_str(cl_int e);
 /* Print a list of available OpenCL platforms and devices
  * to standard output.
  */
-void print_platforms_devices();
+void *print_platforms_devices();
 
 /* Create an OpenCL context and a matching command queue on a platform from a
  * vendor whose name contains 'plat_name' on a device whose name contains
@@ -115,7 +115,7 @@ void print_platforms_devices();
  * compiler option.
  */
 extern const char *CHOOSE_INTERACTIVELY;
-void create_context_on(const char *plat_name, const char*dev_name, cl_uint
+void *create_context_on(const char *plat_name, const char*dev_name, cl_uint
     idx, cl_context *ctx, cl_command_queue *queue, int enable_profiling);
 
 /* Read contents of file 'filename'.
@@ -142,8 +142,8 @@ cl_kernel kernel_from_string(cl_context ctx,
 /* Print information about a device, found from either the
  * queue or the device_id.
  */
-void print_device_info(cl_device_id device);
-void print_device_info_from_queue(cl_command_queue queue);
+void *print_device_info(cl_device_id device);
+void *print_device_info_from_queue(cl_command_queue queue);
 
 #define SET_1_KERNEL_ARG(knl, arg0) \
   CALL_CL_GUARDED(clSetKernelArg, (knl, 0, sizeof(arg0), &arg0));
