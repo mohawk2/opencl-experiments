@@ -375,7 +375,7 @@ void *create_context_on(const char *plat_name, const char*dev_name, cl_uint idx,
 
 char *read_file(const char *filename)
 {
-  FILE *f = fopen(filename, "r");
+  FILE *f = fopen(filename, "rb");
   CHECK_SYS_ERROR(!f, "read_file: opening file");
 
   // figure out file size
